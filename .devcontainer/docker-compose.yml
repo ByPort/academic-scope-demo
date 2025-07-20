@@ -1,0 +1,11 @@
+services:
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/python:1-3.12-bullseye
+    volumes:
+      - ../..:/workspaces:cached
+      - ${AIRFLOW_PROJ_DIR}:/workspaces/academic-scope-demo/airflow
+      - ${HOST_DATA_DIR}:/workspaces/academic-scope-demo/data
+    command: sleep infinity
+
+volumes:
+  airflow-data:
