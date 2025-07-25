@@ -3,12 +3,10 @@
 {
 	"name": "Academic Scope Demo",
 
-	"dockerComposeFile": [
-		"docker-compose.yml",
-		"docker-compose.airflow.yml"
-	],
-	"service": "devcontainer",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"build": {
+		"context": "..",
+		"dockerfile": "Dockerfile"
+	},
 
 	"features": {
 		"ghcr.io/eitsupi/devcontainer-features/duckdb-cli:1": {},
@@ -16,7 +14,22 @@
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 
-	"initializeCommand": "grep -q '^HOST_DATA_DIR=' .devcontainer/.env || echo HOST_DATA_DIR=${localEnv:HOME}/academic-scope-data >> .devcontainer/.env",
+	"containerEnv": {
+		"HOST_DATA_DIR": "${localEnv:HOME}/academic-scope-demo-data"
+	},
+
+	"mounts": [
+		{
+			"type": "bind",
+			"source": "${localEnv:HOME}/academic-scope-demo-data",
+			"target": "${containerWorkspaceFolder}/data"
+		},
+		{
+			"type": "volume",
+			"source": "academic-scope-demo_airflow-data",
+			"target": "${containerWorkspaceFolder}/airflow"
+		}
+	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

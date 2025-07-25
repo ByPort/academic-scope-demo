@@ -20,8 +20,6 @@
 # Run airflow command in container
 #
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 set -euo pipefail
 
 # check is there a docker-compose command, if not, use "docker compose" instead.
@@ -31,8 +29,6 @@ else
     dc="docker compose"
 fi
 
-export COMPOSE_PROJECT_NAME=academic-scope-demo_devcontainer
-export COMPOSE_FILE="${PROJECT_DIR}/.devcontainer/docker-compose.airflow.yml"
 if [ $# -gt 0 ]; then
     exec $dc run --rm airflow-cli "${@}"
 else
