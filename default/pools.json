@@ -1,0 +1,7 @@
+{
+  "warehouse_lock": {
+    "description": null,
+    "include_deferred": false,
+    "slots": 1
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "authors_parquet": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw/authors.parquet\"\n}"
+  },
+  "duckdb_default": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/warehouse/warehouse.db\"\n}"
+  },
+  "http_default": {
+    "conn_type": "http",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": "https://www.kaggle.com/api/v1/datasets/download/Cornell-University/arxiv",
+    "port": null,
+    "schema": null,
+    "extra": null
+  },
+  "publications_authors_parquet": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw/publications_authors.parquet\"\n}"
+  },
+  "publications_parquet": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw/publications.parquet\"\n}"
+  },
+  "raw_arxiv_json": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw/arxiv-metadata-oai-snapshot.json\"\n}"
+  },
+  "raw_arxiv_zip": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw/arxiv.zip\"\n}"
+  },
+  "raw_dir": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/raw\"\n}"
+  },
+  "warehouse_dir": {
+    "conn_type": "fs",
+    "description": null,
+    "login": null,
+    "password": null,
+    "host": null,
+    "port": null,
+    "schema": null,
+    "extra": "{\n  \"path\": \"/data/warehouse\"\n}"
+  }
+}

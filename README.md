@@ -22,18 +22,26 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
     echo "HOST_DATA_DIR=$HOME/academic-scope-data" > .env
     ```
 
-3. **Start the pipeline**
+3. **Start Airflow**
     ```bash
-    # Start Airflow
     docker compose up -d --no-recreate
-    
-    # Trigger the ETL pipeline
+    ```
+
+4. **Configure pools and connections**
+    ```bash
+    cat default/pools.json | docker compose run --rm -T airflow-cli pools import /dev/stdin
+    # /dev/stdin doesn't work for connections for some reason
+    cat default/connections.json | docker compose run --rm -T airflow-cli bash -c 'cat > /tmp/connections.json && airflow connections import /tmp/connections.json'
+    ```
+
+5. **Start the pipeline**
+    ```bash
     ./airflow.sh dags trigger arxiv_etl
     ```
 
-4. **Monitor progress**
+6. **Monitor progress**
    - Access Airflow UI at `http://localhost:8080` (credentials: `airflow`/`airflow`)
-   - Watch the `arxiv_etl` DAG execution in the Graph or Gantt view
+   - Watch the `arxiv_etl` DAG execution in the Graph or Grid view
 
 ## 💻 Working with the Pipeline
 
@@ -123,15 +131,17 @@ academic-scope-demo/
 The ETL pipeline (`arxiv_etl` DAG) orchestrates 10 tasks:
 
 1. **check_if_zip_exists**: Verifies if the dataset is already downloaded
-2. **download_zip**: Downloads the arXiv metadata dataset from Kaggle
-3. **unzip**: Extracts the JSON file from the downloaded archive
-4. **prepare_warehouse**: Initializes the DuckDB database schema
-5. **extract_publications**: Processes publication metadata into Parquet format
-6. **extract_authors**: Extracts unique author names into Parquet format
-7. **extract_publications_authors**: Creates publication-author relationship mappings
-8. **load_publications**: Imports publications data into the warehouse
-9. **load_authors**: Imports authors data into the warehouse
-10. **load_publications_authors**: Imports relationship mappings into the warehouse
+2. **prepare_raw_folder**: Creates `data/raw` folder
+3. **download_zip**: Downloads the arXiv metadata dataset from Kaggle
+4. **unzip**: Extracts the JSON file from the downloaded archive
+5. **prepare_warehouse_folder**: Creates `data/warehouse` folder
+6. **prepare_warehouse**: Initializes the DuckDB database schema
+7. **extract_publications**: Processes publication metadata into Parquet format
+8. **extract_authors**: Extracts unique author names into Parquet format
+9. **extract_publications_authors**: Creates publication-author relationship mappings
+10. **load_publications**: Imports publications data into the warehouse
+11. **load_authors**: Imports authors data into the warehouse
+12. **load_publications_authors**: Imports relationship mappings into the warehouse
 
 ### Technologies Used
 
