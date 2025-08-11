@@ -4,3 +4,4 @@
 # Except the Dockerfile and requirements.txt
 !airflow.Dockerfile
 !requirements.txt
+!requirements-dev.txt

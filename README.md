@@ -61,7 +61,7 @@ Run Airflow commands using the helper script:
 ### Development Setup
 For local DAG development:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 ### Data Exploration
@@ -122,6 +122,8 @@ academic-scope-demo/
 ├── .devcontainer/               # Dev container configuration
 ├── airflow.sh                   # Airflow CLI helper script
 ├── requirements.txt             # Python dependencies
+├── requirements-dev.txt         # Python dev dependencies
+├── pyproject.toml               # Python tools configurations
 └── README.md                    # This file
 ```
 
