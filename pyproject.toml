@@ -1,6 +1,43 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
 [tool.ruff.lint]
-extend-select = ["AIR3"]
-preview = true
+extend-select = [
+    "AIR3",  # Airflow specific rules
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["airflow", "common"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+# [[tool.mypy.overrides]]
+# module = [
+#     "airflow.*",
+#     "duckdb.*",
+# ]
+# ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -9,5 +46,5 @@ addopts = [
     "--tb=short",
     "--cov=airflow/dags",
     "--cov-report=term-missing",
-#    "--cov-report=html:htmlcov",
+    "--cov-report=html:htmlcov",
 ]
