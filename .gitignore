@@ -226,3 +226,4 @@ pyrightconfig.json
 airflow/logs
 airflow/.tmp
 data
+tests/airflow

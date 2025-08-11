@@ -1,3 +1,13 @@
 [tool.ruff.lint]
 extend-select = ["AIR3"]
 preview = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--tb=short",
+    "--cov=airflow/dags",
+    "--cov-report=term-missing",
+#    "--cov-report=html:htmlcov",
+]

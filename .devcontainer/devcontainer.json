@@ -15,7 +15,8 @@
 	},
 
 	"containerEnv": {
-		"HOST_DATA_DIR": "${localEnv:HOME}/academic-scope-demo-data"
+		"HOST_DATA_DIR": "${localEnv:HOME}/academic-scope-demo-data",
+		"PYTHONPATH": "${containerWorkspaceFolder}/airflow/dags"
 	},
 
 	"mounts": [
@@ -43,7 +44,14 @@
 			"extensions": [
 				"charliermarsh.ruff",
 				"matangover.mypy"
-			]
+			],
+			"settings": {
+				"python.testing.pytestArgs": [
+					"tests"
+				],
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true
+			}
 		}
 	}
 

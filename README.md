@@ -43,6 +43,11 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
    - Access Airflow UI at `http://localhost:8080` (credentials: `airflow`/`airflow`)
    - Watch the `arxiv_etl` DAG execution in the Graph or Grid view
 
+### Test
+```bash
+    PYTHONPATH=$PYTHONPATH:$(pwd)/airflow/dags pytest
+```
+
 ## 💻 Working with the Pipeline
 
 ### Airflow Management
@@ -119,6 +124,7 @@ academic-scope-demo/
 ├── data/
 │   ├── raw/                     # Raw data files
 │   └── warehouse/               # DuckDB warehouse
+├── tests/                       # Test suite (pytest)
 ├── .devcontainer/               # Dev container configuration
 ├── airflow.sh                   # Airflow CLI helper script
 ├── requirements.txt             # Python dependencies
