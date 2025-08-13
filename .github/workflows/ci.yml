@@ -28,7 +28,7 @@ jobs:
       run: ruff check .
     
     - name: Run Ruff formatter
-      run: ruff format --check .
+      run: ruff format --diff .
 
   type-check:
     name: Type check with MyPy

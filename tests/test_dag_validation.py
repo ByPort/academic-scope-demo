@@ -1,5 +1,7 @@
 import pytest
 
+from airflow import DAG
+
 
 class TestDagValidation:
     """Test basic DAG validation across all DAGs."""
@@ -10,7 +12,9 @@ class TestDagValidation:
 
     def test_dag_bag_size(self, dagbag):
         """Test that we have at least one DAG."""
-        assert len(dagbag.dag_ids) >= 1, f"Expected at least 1 DAG, found {len(dagbag.dag_ids)}"
+        assert len(dagbag.dag_ids) >= 1, (
+            f"Expected at least 1 DAG, found {len(dagbag.dag_ids)}"
+        )
 
     def test_dags_loaded(self, dagbag):
         """Test that all DAGs can be loaded without errors."""
@@ -23,8 +27,16 @@ class TestArxivETLDag:
     """Test class for arxiv_etl DAG validation."""
 
     @pytest.fixture(scope="class")
-    def dag(self, dagbag):
-        """Get the arxiv_etl DAG."""
+    def dag(self, dagbag) -> DAG | None:
+        """
+        Get the arxiv_etl DAG.
+
+        Args:
+            dagbag (DagBag): The Airflow DagBag fixture.
+
+        Returns:
+            The arxiv_etl DAG if found, otherwise None.
+        """
         return dagbag.get_dag(dag_id="arxiv_etl")
 
     def test_dag_loaded(self, dag):
@@ -42,7 +54,7 @@ class TestArxivETLDag:
         "expected_task_id",
         [
             "prepare_raw_folder",
-            "check_if_zip_exists", 
+            "check_if_zip_exists",
             "download_zip",
             "unzip",
             "extract_publications",
@@ -85,13 +97,13 @@ class TestArxivETLDag:
 
         # Get tasks by ID
         tasks = {task.task_id: task for task in dag.tasks}
-        
+
         # Check that key tasks exist
         assert "check_if_zip_exists" in tasks
         assert "prepare_warehouse_folder" in tasks
         assert "prepare_warehouse" in tasks
         assert "extract_publications" in tasks
         assert "load_publications" in tasks
-        
+
         # Verify basic structure - all tasks should be connected to the DAG
         assert all(task.dag == dag for task in dag.tasks)
