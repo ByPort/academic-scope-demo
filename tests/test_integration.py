@@ -1,6 +1,7 @@
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from airflow.models import DagBag
 
 from tests.conftest import MockConnection
 
@@ -34,14 +35,14 @@ def create_execution_context() -> dict:
 class TestDAGStructure:
     """Test DAG structure and configuration without execution."""
 
-    def test_dag_loads_successfully(self, dagbag):
+    def test_dag_loads_successfully(self, dagbag: DagBag) -> None:
         """Test that the DAG can be loaded without errors."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
         assert dag is not None
         assert dag.dag_id == "arxiv_etl"
         assert len(dag.tasks) == 13  # Exact number to catch missing/extra tasks
 
-    def test_task_dependencies(self, dagbag):
+    def test_task_dependencies(self, dagbag: DagBag) -> None:
         """Test that task dependencies are correctly configured."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
 
@@ -70,10 +71,10 @@ class TestBranchingLogic:
     @patch("pathlib.Path.exists")
     def test_check_if_zip_exists_when_file_exists(
         self,
-        mock_exists,
-        mock_connection_get,
-        dagbag,
-    ):
+        mock_exists: MagicMock,
+        mock_connection_get: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test branching when zip file exists - should return skip_download_zip."""
         # Setup
         mock_conn = Mock()
@@ -97,10 +98,10 @@ class TestBranchingLogic:
     @patch("pathlib.Path.exists")
     def test_check_if_zip_exists_when_file_missing(
         self,
-        mock_exists,
-        mock_connection_get,
-        dagbag,
-    ):
+        mock_exists: MagicMock,
+        mock_connection_get: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test branching when zip file missing - should return prepare_raw_folder."""
         # Setup
         mock_conn = Mock()
@@ -124,7 +125,7 @@ class TestBranchingLogic:
 class TestSQLTemplateValidation:
     """Test that SQL templates are syntactically correct and use right connections."""
 
-    def test_extract_publications_sql_syntax(self, dagbag):
+    def test_extract_publications_sql_syntax(self, dagbag: DagBag) -> None:
         """
         Test that extract_publications returns valid SQL
         with correct connection references.
@@ -148,7 +149,7 @@ class TestSQLTemplateValidation:
         # Check for typos in column names - this will catch spelling mistakes!
         assert "id, title, abstract, categories, update_date, submitter" in sql
 
-    def test_prepare_warehouse_sql_syntax(self, dagbag):
+    def test_prepare_warehouse_sql_syntax(self, dagbag: DagBag) -> None:
         """Test that prepare_warehouse returns valid SQL schema."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
         task = dag.get_task("prepare_warehouse")
@@ -171,7 +172,7 @@ class TestSQLTemplateValidation:
 class TestBashCommandValidation:
     """Test that bash commands are properly configured."""
 
-    def test_download_zip_command_structure(self, dagbag):
+    def test_download_zip_command_structure(self, dagbag: DagBag) -> None:
         """Test that download_zip has proper bash command."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
         task = dag.get_task("download_zip")
@@ -184,7 +185,7 @@ class TestBashCommandValidation:
         # Should reference the connection
         assert "conn.raw_arxiv_zip.extra_dejson.path" in command
 
-    def test_unzip_command_structure(self, dagbag):
+    def test_unzip_command_structure(self, dagbag: DagBag) -> None:
         """Test that unzip has proper bash command."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
         task = dag.get_task("unzip")
@@ -202,7 +203,11 @@ class TestDuckDBTaskExecution:
     """Test DuckDB task execution with minimal but effective mocking."""
 
     @patch("airflow.models.connection.Connection.get_connection_from_secrets")
-    def test_prepare_warehouse_executes_correct_sql(self, mock_get_connection, dagbag):
+    def test_prepare_warehouse_executes_correct_sql(
+        self,
+        mock_get_connection: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test that prepare_warehouse executes the expected SQL statements."""
         # Setup
         mock_get_connection.return_value = MockConnection(
@@ -220,7 +225,7 @@ class TestDuckDBTaskExecution:
             mock_conn = Mock()
             executed_sql = []
 
-            def capture_sql(sql):
+            def capture_sql(sql: str) -> None:
                 executed_sql.append(sql)
 
             mock_conn.sql.side_effect = capture_sql
@@ -243,14 +248,18 @@ class TestConnectionUsage:
     """Test that tasks use the correct connections."""
 
     @patch("airflow.sdk.definitions.connection.Connection.get")
-    def test_folder_tasks_use_correct_connections(self, mock_connection_get, dagbag):
+    def test_folder_tasks_use_correct_connections(
+        self,
+        mock_connection_get: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test that folder preparation tasks use the right connection IDs."""
         dag = dagbag.get_dag(dag_id="arxiv_etl")
 
         # Mock connection to track which connections are requested
         requested_connections = []
 
-        def track_connection_calls(conn_id):
+        def track_connection_calls(conn_id: str) -> Mock:
             requested_connections.append(conn_id)
             mock_conn = Mock()
             mock_conn.extra_dejson = {"path": f"/tmp/{conn_id}"}
@@ -277,7 +286,11 @@ class TestErrorScenarios:
     """Test error handling with real validation."""
 
     @patch("airflow.sdk.definitions.connection.Connection.get")
-    def test_missing_connection_raises_error(self, mock_connection_get, dagbag):
+    def test_missing_connection_raises_error(
+        self,
+        mock_connection_get: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test that missing connections cause proper failures."""
         mock_connection_get.side_effect = KeyError(
             "Connection 'missing_conn' not found",
@@ -291,7 +304,11 @@ class TestErrorScenarios:
             task.python_callable(choices=("skip_download_zip", "prepare_raw_folder"))
 
     @patch("airflow.models.connection.Connection.get_connection_from_secrets")
-    def test_duckdb_sql_error_propagates(self, mock_get_connection, dagbag):
+    def test_duckdb_sql_error_propagates(
+        self,
+        mock_get_connection: MagicMock,
+        dagbag: DagBag,
+    ) -> None:
         """Test that SQL errors are properly propagated."""
         # Setup connection
         mock_get_connection.return_value = MockConnection(

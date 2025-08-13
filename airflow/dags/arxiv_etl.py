@@ -22,22 +22,22 @@ DEFAULT_ARGS = {
     max_active_runs=1,
     max_active_tasks=1,
 )
-def arxiv_etl():
+def arxiv_etl() -> None:
     @task.branch()
-    def check_if_zip_exists(choices: tuple[str, str]) -> bool:
+    def check_if_zip_exists(choices: tuple[str, str]) -> str:
         if Path(Connection.get("raw_arxiv_zip").extra_dejson.get("path")).exists():
             return choices[0]
         return choices[1]
 
     @task()
-    def prepare_raw_folder():
+    def prepare_raw_folder() -> None:
         Path(Connection.get("raw_dir").extra_dejson.get("path")).mkdir(
             parents=True,
             exist_ok=True,
         )
 
     @task.bash()
-    def download_zip():
+    def download_zip() -> str:
         return """
         curl -s -L \
             -o {{ conn.raw_arxiv_zip.extra_dejson.path }} \
@@ -45,11 +45,11 @@ def arxiv_etl():
         """
 
     @task()
-    def skip_download_zip():
+    def skip_download_zip() -> None:
         pass
 
     @task.bash(trigger_rule="none_failed_min_one_success")
-    def unzip():
+    def unzip() -> str:
         return """
         unzip \
             -o {{ conn.raw_arxiv_zip.extra_dejson.path }} \
@@ -57,14 +57,14 @@ def arxiv_etl():
         """
 
     @task()
-    def prepare_warehouse_folder():
+    def prepare_warehouse_folder() -> None:
         Path(Connection.get("warehouse_dir").extra_dejson.get("path")).mkdir(
             parents=True,
             exist_ok=True,
         )
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
-    def prepare_warehouse():
+    def prepare_warehouse() -> str:
         return """
         CREATE OR REPLACE TABLE publications (
             id VARCHAR,
@@ -85,7 +85,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(config=DUCKDB_CONFIG)
-    def extract_publications():
+    def extract_publications() -> str:
         return """
         COPY (
             SELECT DISTINCT
@@ -95,7 +95,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(config=DUCKDB_CONFIG)
-    def extract_authors():
+    def extract_authors() -> str:
         return """
         COPY (
             SELECT DISTINCT
@@ -106,7 +106,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(config=DUCKDB_CONFIG)
-    def extract_publications_authors():
+    def extract_publications_authors() -> str:
         return """
         COPY (
             SELECT DISTINCT
@@ -119,7 +119,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
-    def load_publications():
+    def load_publications() -> str:
         return """
         DELETE FROM publications;
         INSERT INTO publications
@@ -128,7 +128,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
-    def load_authors():
+    def load_authors() -> str:
         return """
         DELETE FROM authors;
         INSERT INTO authors
@@ -137,7 +137,7 @@ def arxiv_etl():
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
-    def load_publications_authors():
+    def load_publications_authors() -> str:
         return """
         DELETE FROM publications_authors;
         INSERT INTO publications_authors

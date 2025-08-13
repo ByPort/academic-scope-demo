@@ -48,7 +48,7 @@ jobs:
         pip install -r requirements-dev.txt
     
     - name: Run MyPy
-      run: mypy airflow/dags/ --ignore-missing-imports
+      run: mypy airflow/dags/ tests
 
   test:
     name: Run Tests

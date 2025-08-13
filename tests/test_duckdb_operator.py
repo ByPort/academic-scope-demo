@@ -10,7 +10,7 @@ from common.operators.duckdb import DuckDBDecoratedOperator, DuckDBOperator, duc
 class TestDuckDBOperator:
     """Test the DuckDBOperator class."""
 
-    def test_operator_initialization(self):
+    def test_operator_initialization(self) -> None:
         """Test operator initialization with required parameters."""
         operator = DuckDBOperator(task_id="test_task", sql="SELECT 1")
 
@@ -19,7 +19,7 @@ class TestDuckDBOperator:
         assert operator.duckdb_conn_id == "duckdb_default"
         assert operator.config is None
 
-    def test_operator_initialization_custom(self):
+    def test_operator_initialization_custom(self) -> None:
         """Test operator initialization with custom parameters."""
         config = {"memory_limit": "2GB"}
         operator = DuckDBOperator(
@@ -34,7 +34,7 @@ class TestDuckDBOperator:
         assert operator.duckdb_conn_id == "custom_conn"
         assert operator.config == config
 
-    def test_template_fields(self):
+    def test_template_fields(self) -> None:
         """Test that SQL is properly templated."""
         operator = DuckDBOperator(task_id="test_task", sql="SELECT 1")
 
@@ -42,7 +42,11 @@ class TestDuckDBOperator:
         assert operator.template_fields_renderers["sql"] == "sql"
 
     @patch("common.operators.duckdb.DuckDBHook")
-    def test_execute_success(self, mock_hook_class, mock_airflow_connections):
+    def test_execute_success(
+        self,
+        mock_hook_class: MagicMock,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test successful execution of the operator."""
         # Setup
         mock_hook = MagicMock()
@@ -64,7 +68,11 @@ class TestDuckDBOperator:
         assert result == mock_result
 
     @patch("common.operators.duckdb.DuckDBHook")
-    def test_execute_with_config(self, mock_hook_class, mock_airflow_connections):
+    def test_execute_with_config(
+        self,
+        mock_hook_class: MagicMock,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test execution with custom configuration."""
         # Setup
         mock_hook = MagicMock()
@@ -94,9 +102,9 @@ class TestDuckDBOperator:
     @patch("common.operators.duckdb.DuckDBHook")
     def test_execute_exception_handling(
         self,
-        mock_hook_class,
-        mock_airflow_connections,
-    ):
+        mock_hook_class: MagicMock,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test that execution exceptions are properly handled."""
         # Setup
         mock_hook = MagicMock()
@@ -109,7 +117,7 @@ class TestDuckDBOperator:
         with pytest.raises(Exception, match="SQL execution failed"):
             operator.execute({})
 
-    def test_sql_templating(self, mock_airflow_connections):
+    def test_sql_templating(self, mock_airflow_connections: dict) -> None:
         """Test SQL templating with Airflow variables."""
         with DAG(dag_id="test_dag", start_date=datetime(2023, 1, 1)) as dag:
             operator = DuckDBOperator(
@@ -126,16 +134,16 @@ class TestDuckDBOperator:
 class TestDuckDBDecoratedOperator:
     """Test the DuckDBDecoratedOperator class."""
 
-    def test_decorated_operator_attributes(self):
+    def test_decorated_operator_attributes(self) -> None:
         """Test decorated operator class attributes."""
         assert DuckDBDecoratedOperator.custom_operator_name == "@duckdb_task"
         assert DuckDBDecoratedOperator.overwrite_rtif_after_execution is True
 
-    def test_decorated_operator_template_fields(self):
+    def test_decorated_operator_template_fields(self) -> None:
         """Test that template fields are properly inherited."""
 
         # Create a dummy function for testing
-        def dummy_callable():
+        def dummy_callable() -> str:
             return "SELECT 1"
 
         operator = DuckDBDecoratedOperator(
@@ -151,9 +159,9 @@ class TestDuckDBDecoratedOperator:
     @patch("common.operators.duckdb.DuckDBHook")
     def test_decorated_operator_execute(
         self,
-        mock_hook_class,
-        mock_airflow_connections,
-    ):
+        mock_hook_class: MagicMock,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test execution of decorated operator."""
         # Setup
         mock_hook = MagicMock()
@@ -161,7 +169,7 @@ class TestDuckDBDecoratedOperator:
         mock_hook.sql.return_value = mock_result
         mock_hook_class.return_value = mock_hook
 
-        def sql_callable():
+        def sql_callable() -> str:
             return "SELECT COUNT(*) FROM test_table"
 
         operator = DuckDBDecoratedOperator(
@@ -178,17 +186,20 @@ class TestDuckDBDecoratedOperator:
         context = {"ti": mock_ti}
 
         # Execute
-        result = operator.execute(context)
+        result = operator.execute(context)  # type: ignore[arg-type]
 
         # Assertions
         mock_hook_class.assert_called_once()
         mock_hook.sql.assert_called_once_with("SELECT COUNT(*) FROM test_table")
         assert result == mock_result
 
-    def test_decorated_operator_invalid_return_type(self, mock_airflow_connections):
+    def test_decorated_operator_invalid_return_type(
+        self,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test error handling when callable returns non-string."""
 
-        def invalid_callable():
+        def invalid_callable() -> int:
             return 123  # Invalid return type
 
         operator = DuckDBDecoratedOperator(
@@ -202,12 +213,15 @@ class TestDuckDBDecoratedOperator:
         context = {"ti": mock_ti}
 
         with pytest.raises(TypeError, match="must be a non-empty string"):
-            operator.execute(context)
+            operator.execute(context)  # type: ignore[arg-type]
 
-    def test_decorated_operator_empty_string(self, mock_airflow_connections):
+    def test_decorated_operator_empty_string(
+        self,
+        mock_airflow_connections: dict,
+    ) -> None:
         """Test error handling when callable returns empty string."""
 
-        def empty_callable():
+        def empty_callable() -> str:
             return ""  # Empty string
 
         operator = DuckDBDecoratedOperator(
@@ -221,45 +235,45 @@ class TestDuckDBDecoratedOperator:
         context = {"ti": mock_ti}
 
         with pytest.raises(TypeError, match="must be a non-empty string"):
-            operator.execute(context)
+            operator.execute(context)  # type: ignore[arg-type]
 
 
 class TestDuckDBTaskDecorator:
     """Test the duckdb_task decorator function."""
 
-    def test_duckdb_task_decorator(self):
+    def test_duckdb_task_decorator(self) -> None:
         """Test that the decorator function works correctly."""
 
         @duckdb_task
-        def test_sql_task():
+        def test_sql_task() -> str:
             return "SELECT 1"
 
         # The decorator should create a DuckDBDecoratedOperator
         task_instance = test_sql_task()
         # When called, it returns an XComArg, but the operator is accessible via task
-        actual_task = task_instance.operator
+        actual_task = task_instance.operator  # type: ignore[attr-defined]
         assert isinstance(actual_task, DuckDBDecoratedOperator)
         assert actual_task.python_callable.__name__ == "test_sql_task"
 
-    def test_duckdb_task_decorator_with_params(self):
+    def test_duckdb_task_decorator_with_params(self) -> None:
         """Test decorator with custom parameters."""
 
         @duckdb_task(duckdb_conn_id="custom_conn", config={"memory_limit": "2GB"})
-        def test_sql_task():
+        def test_sql_task() -> str:
             return "CREATE TABLE test (id INT)"
 
         task_instance = test_sql_task()
-        actual_task = task_instance.operator
+        actual_task = task_instance.operator  # type: ignore[attr-defined]
         assert isinstance(actual_task, DuckDBDecoratedOperator)
         assert actual_task.duckdb_conn_id == "custom_conn"
         assert actual_task.config == {"memory_limit": "2GB"}
 
-    def test_duckdb_task_in_dag_context(self, mock_airflow_connections):
+    def test_duckdb_task_in_dag_context(self, mock_airflow_connections: dict) -> None:
         """Test using duckdb_task decorator within a DAG context."""
         with DAG(dag_id="test_dag", start_date=datetime(2023, 1, 1)) as dag:
 
             @duckdb_task
-            def create_table():
+            def create_table() -> str:
                 return """
                 CREATE TABLE test_table (
                     id INTEGER,
@@ -271,6 +285,6 @@ class TestDuckDBTaskDecorator:
 
         # In DAG context, the task is created differently
         actual_task = task.operator if hasattr(task, "operator") else task
-        assert actual_task.dag == dag
-        assert actual_task.task_id == "create_table"
+        assert actual_task.dag == dag  # type: ignore[union-attr]
+        assert actual_task.task_id == "create_table"  # type: ignore[union-attr]
         assert isinstance(actual_task, DuckDBDecoratedOperator)

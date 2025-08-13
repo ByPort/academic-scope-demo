@@ -23,13 +23,13 @@ from common.hooks.duckdb import DuckDBHook  # noqa: E402
 class MockConnection:
     """Mock connection class for testing."""
 
-    def __init__(self, conn_id, extra_dejson=None):
+    def __init__(self, conn_id: str, extra_dejson: dict | None = None):
         self.conn_id = conn_id
         self.extra_dejson = extra_dejson or {}
 
 
 @pytest.fixture(scope="session", autouse=True)
-def reset_db():
+def reset_db() -> None:
     resetdb()
 
 
@@ -82,7 +82,7 @@ def mock_airflow_connections() -> Generator[dict, None, None]:
         "airflow.models.connection.Connection.get_connection_from_secrets",
     ) as mock_get:
 
-        def get_connection_side_effect(conn_id: str):
+        def get_connection_side_effect(conn_id: str) -> MockConnection:
             if conn_id in connections:
                 return connections[conn_id]
 

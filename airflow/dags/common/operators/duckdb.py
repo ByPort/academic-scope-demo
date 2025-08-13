@@ -1,7 +1,8 @@
 from collections.abc import Callable, Collection, Mapping
 from typing import Any, ClassVar
 
-from airflow.sdk import BaseOperator
+import duckdb
+from airflow.sdk import BaseOperator, Context
 from airflow.sdk.bases.decorator import (
     DecoratedOperator,
     TaskDecorator,
@@ -27,25 +28,25 @@ class DuckDBOperator(BaseOperator):
     :param duckdb_conn_id: The connection ID for the DuckDB database.
     """
 
-    template_fields = ("sql",)
+    template_fields: tuple[str, ...] = ("sql",)
     template_fields_renderers: ClassVar[dict] = {"sql": "sql"}
 
-    xcom_push = None
+    xcom_push: None = None
 
     def __init__(
         self,
-        sql,
-        duckdb_conn_id=DuckDBHook.default_conn_name,
+        sql: str,
+        duckdb_conn_id: str = DuckDBHook.default_conn_name,
         config: dict | None = None,
-        *args,
-        **kwargs,
-    ):
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.sql = sql
         self.duckdb_conn_id = duckdb_conn_id
         self.config = config
 
-    def execute(self, context):
+    def execute(self, context: Context) -> duckdb.DuckDBPyRelation:
         duckdb_hook = DuckDBHook(duckdb_conn_id=self.duckdb_conn_id, config=self.config)
 
         self.log.info("Executing SQL: %s", self.sql)
@@ -77,7 +78,7 @@ class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
         multiple_outputs: bool | None = None,
         op_args: Collection[Any] | None = None,
         op_kwargs: Mapping[str, Any] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(
             python_callable=python_callable,
@@ -88,7 +89,7 @@ class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
             **kwargs,
         )
 
-    def execute(self, context) -> Any:
+    def execute(self, context: Context) -> Any:
         context_merge(context, self.op_kwargs)
         kwargs = determine_kwargs(self.python_callable, self.op_args, context)
 
@@ -101,7 +102,7 @@ class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
             )
             raise TypeError(msg)
 
-        context["ti"].render_templates()
+        context["ti"].render_templates()  # type: ignore[attr-defined]
 
         return super().execute(context)
 
@@ -109,7 +110,7 @@ class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
 def duckdb_task(
     python_callable: Callable | None = None,
     multiple_outputs: bool | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> TaskDecorator:
     return task_decorator_factory(
         python_callable=python_callable,
