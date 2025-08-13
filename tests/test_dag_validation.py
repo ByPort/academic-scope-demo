@@ -1,22 +1,22 @@
 import pytest
-
-from airflow import DAG
+from airflow.models import DagBag
+from airflow.sdk.definitions.dag import DAG
 
 
 class TestDagValidation:
     """Test basic DAG validation across all DAGs."""
 
-    def test_no_import_errors(self, dagbag):
+    def test_no_import_errors(self, dagbag: DagBag) -> None:
         """Test that all DAG files can be imported without errors."""
         assert len(dagbag.import_errors) == 0, f"Import errors: {dagbag.import_errors}"
 
-    def test_dag_bag_size(self, dagbag):
+    def test_dag_bag_size(self, dagbag: DagBag) -> None:
         """Test that we have at least one DAG."""
         assert len(dagbag.dag_ids) >= 1, (
             f"Expected at least 1 DAG, found {len(dagbag.dag_ids)}"
         )
 
-    def test_dags_loaded(self, dagbag):
+    def test_dags_loaded(self, dagbag: DagBag) -> None:
         """Test that all DAGs can be loaded without errors."""
         for dag_id in dagbag.dag_ids:
             dag = dagbag.get_dag(dag_id)
@@ -27,7 +27,7 @@ class TestArxivETLDag:
     """Test class for arxiv_etl DAG validation."""
 
     @pytest.fixture(scope="class")
-    def dag(self, dagbag) -> DAG | None:
+    def dag(self, dagbag: DagBag) -> DAG:
         """
         Get the arxiv_etl DAG.
 
@@ -37,14 +37,17 @@ class TestArxivETLDag:
         Returns:
             The arxiv_etl DAG if found, otherwise None.
         """
-        return dagbag.get_dag(dag_id="arxiv_etl")
+        dag = dagbag.get_dag(dag_id="arxiv_etl")
+        assert dag is not None, "DAG arxiv_etl not found in DagBag"
+        assert isinstance(dag, DAG), "DAG is not an instance of airflow.models.DAG"
+        return dag
 
-    def test_dag_loaded(self, dag):
+    def test_dag_loaded(self, dag: DAG) -> None:
         """Test that the DAG is loaded without errors."""
         assert dag is not None
         assert dag.dag_id == "arxiv_etl"
 
-    def test_dag_structure(self, dag):
+    def test_dag_structure(self, dag: DAG) -> None:
         """Test DAG structure and task count."""
         assert dag is not None
         assert len(dag.tasks) > 0
@@ -67,31 +70,31 @@ class TestArxivETLDag:
             "load_publications_authors",
         ],
     )
-    def test_task_exists(self, dag, expected_task_id):
+    def test_task_exists(self, dag: DAG, expected_task_id: str) -> None:
         """Test that expected tasks exist in the DAG."""
         assert dag is not None
         task_ids = [task.task_id for task in dag.tasks]
         assert expected_task_id in task_ids
 
-    def test_dag_schedule(self, dag):
+    def test_dag_schedule(self, dag: DAG) -> None:
         """Test DAG schedule configuration."""
         assert dag is not None
         # This DAG is set to manual triggering (schedule=None)
         assert dag.schedule is None
 
-    def test_dag_max_active_runs(self, dag):
+    def test_dag_max_active_runs(self, dag: DAG) -> None:
         """Test DAG max_active_runs configuration."""
         assert dag is not None
         assert isinstance(dag.max_active_runs, int)
         assert dag.max_active_runs >= 1
 
-    def test_dag_max_active_tasks(self, dag):
+    def test_dag_max_active_tasks(self, dag: DAG) -> None:
         """Test DAG max_active_tasks configuration."""
         assert dag is not None
         assert isinstance(dag.max_active_tasks, int)
         assert dag.max_active_tasks >= 1
 
-    def test_task_dependencies(self, dag):
+    def test_task_dependencies(self, dag: DAG) -> None:
         """Test task dependencies."""
         assert dag is not None
 
