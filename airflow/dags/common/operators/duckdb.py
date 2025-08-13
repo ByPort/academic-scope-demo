@@ -1,9 +1,15 @@
-from typing import Any, Callable, Collection, Mapping
-import warnings
+from collections.abc import Callable, Collection, Mapping
+from typing import Any, ClassVar
 
 from airflow.sdk import BaseOperator
-from airflow.sdk.bases.decorator import DecoratedOperator, TaskDecorator, task_decorator_factory
-from airflow.sdk.definitions._internal.types import SET_DURING_EXECUTION
+from airflow.sdk.bases.decorator import (
+    DecoratedOperator,
+    TaskDecorator,
+    task_decorator_factory,
+)
+from airflow.sdk.definitions._internal.types import (
+    SET_DURING_EXECUTION,  # noqa: PLC2701
+)
 from airflow.utils.context import context_merge
 from airflow.utils.operator_helpers import determine_kwargs
 
@@ -13,22 +19,27 @@ from common.hooks.duckdb import DuckDBHook
 class DuckDBOperator(BaseOperator):
     """
     Operator to execute DuckDB SQL queries.
-    
+
     This operator allows you to run SQL commands against a DuckDB database.
     It can be used for data manipulation, querying, and other database operations.
-    
+
     :param sql: The SQL query to execute.
     :param duckdb_conn_id: The connection ID for the DuckDB database.
     """
 
-    template_fields = ('sql',)
-    template_fields_renderers = {
-        'sql': 'sql',
-    }
+    template_fields = ("sql",)
+    template_fields_renderers: ClassVar[dict] = {"sql": "sql"}
 
     xcom_push = None
 
-    def __init__(self, sql, duckdb_conn_id=DuckDBHook.default_conn_name, config: dict | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        sql,
+        duckdb_conn_id=DuckDBHook.default_conn_name,
+        config: dict | None = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.sql = sql
         self.duckdb_conn_id = duckdb_conn_id
@@ -42,18 +53,21 @@ class DuckDBOperator(BaseOperator):
 
         if result:
             self.log.info("Query executed successfully, result: %s", result)
-        
+
         return result
 
 
 class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
-    template_fields = (*DecoratedOperator.template_fields, *DuckDBOperator.template_fields)
-    template_fields_renderers = {
+    template_fields = (
+        *DecoratedOperator.template_fields,
+        *DuckDBOperator.template_fields,
+    )
+    template_fields_renderers: ClassVar[dict] = {
         **DecoratedOperator.template_fields_renderers,
         **DuckDBOperator.template_fields_renderers,
     }
 
-    custom_operator_name = '@duckdb_task'
+    custom_operator_name = "@duckdb_task"
     overwrite_rtif_after_execution = True
 
     def __init__(
@@ -80,8 +94,12 @@ class DuckDBDecoratedOperator(DecoratedOperator, DuckDBOperator):
 
         self.sql = self.python_callable(*self.op_args, **kwargs)
 
-        if not isinstance(self.sql, str) or self.sql.strip() == "":
-            raise TypeError("The returned value from the TaskFlow callable must be a non-empty string.")
+        if not isinstance(self.sql, str) or not self.sql.strip():
+            msg = (
+                "The returned value from the TaskFlow callable "
+                "must be a non-empty string."
+            )
+            raise TypeError(msg)
 
         context["ti"].render_templates()
 

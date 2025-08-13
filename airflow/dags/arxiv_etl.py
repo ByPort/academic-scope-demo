@@ -1,15 +1,13 @@
 from pathlib import Path
 
-from airflow.decorators import dag, task
-from airflow.sdk import Connection
+from airflow.sdk import Connection, dag, task
 
 from common.operators.duckdb import duckdb_task
 
-
 DUCKDB_CONFIG = {
-    'memory_limit': '1GB',
-    'threads': '1',
-    'preserve_insertion_order': 'false',
+    "memory_limit": "1GB",
+    "threads": "1",
+    "preserve_insertion_order": "false",
 }
 
 DEFAULT_ARGS = {
@@ -27,17 +25,24 @@ DEFAULT_ARGS = {
 def arxiv_etl():
     @task.branch()
     def check_if_zip_exists(choices: tuple[str, str]) -> bool:
-        if Path(Connection.get('raw_arxiv_zip').extra_dejson.get('path')).exists():
+        if Path(Connection.get("raw_arxiv_zip").extra_dejson.get("path")).exists():
             return choices[0]
         return choices[1]
 
     @task()
     def prepare_raw_folder():
-        Path(Connection.get('raw_dir').extra_dejson.get('path')).mkdir(parents=True, exist_ok=True)
+        Path(Connection.get("raw_dir").extra_dejson.get("path")).mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
     @task.bash()
     def download_zip():
-        return "curl -s -L -o {{ conn.raw_arxiv_zip.extra_dejson.path }} {{ conn.http_default.host }}"
+        return """
+        curl -s -L \
+            -o {{ conn.raw_arxiv_zip.extra_dejson.path }} \
+            {{ conn.http_default.host }}
+        """
 
     @task()
     def skip_download_zip():
@@ -45,11 +50,18 @@ def arxiv_etl():
 
     @task.bash(trigger_rule="none_failed_min_one_success")
     def unzip():
-        return "unzip -o {{ conn.raw_arxiv_zip.extra_dejson.path }} -d {{ conn.raw_dir.extra_dejson.path }}"
+        return """
+        unzip \
+            -o {{ conn.raw_arxiv_zip.extra_dejson.path }} \
+            -d {{ conn.raw_dir.extra_dejson.path }}
+        """
 
     @task()
     def prepare_warehouse_folder():
-        Path(Connection.get('warehouse_dir').extra_dejson.get('path')).mkdir(parents=True, exist_ok=True)
+        Path(Connection.get("warehouse_dir").extra_dejson.get("path")).mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def prepare_warehouse():
@@ -102,31 +114,40 @@ def arxiv_etl():
                 trim(array_to_string(unnest(authors_parsed), ' ')) AS author_name
             FROM '{{ conn.raw_arxiv_json.extra_dejson.path }}'
             WHERE authors_parsed IS NOT NULL
-        ) TO '{{ conn.publications_authors_parquet.extra_dejson.path }}' (FORMAT PARQUET);
+        )
+        TO '{{ conn.publications_authors_parquet.extra_dejson.path }}' (FORMAT PARQUET);
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def load_publications():
         return """
         DELETE FROM publications;
-        INSERT INTO publications SELECT DISTINCT * FROM '{{ conn.publications_parquet.extra_dejson.path }}';
+        INSERT INTO publications
+        SELECT DISTINCT *
+        FROM '{{ conn.publications_parquet.extra_dejson.path }}';
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def load_authors():
         return """
         DELETE FROM authors;
-        INSERT INTO authors SELECT DISTINCT * FROM '{{ conn.authors_parquet.extra_dejson.path }}';
+        INSERT INTO authors
+        SELECT DISTINCT *
+        FROM '{{ conn.authors_parquet.extra_dejson.path }}';
         """
 
     @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def load_publications_authors():
         return """
         DELETE FROM publications_authors;
-        INSERT INTO publications_authors SELECT DISTINCT * FROM '{{ conn.publications_authors_parquet.extra_dejson.path }}';
+        INSERT INTO publications_authors
+        SELECT DISTINCT *
+        FROM '{{ conn.publications_authors_parquet.extra_dejson.path }}';
         """
 
-    check_if_zip_exists_task = check_if_zip_exists(choices=("skip_download_zip", "prepare_raw_folder"))
+    check_if_zip_exists_task = check_if_zip_exists(
+        choices=("skip_download_zip", "prepare_raw_folder"),
+    )
 
     prepare_raw_data = [
         check_if_zip_exists_task >> prepare_raw_folder() >> download_zip(),
@@ -134,8 +155,17 @@ def arxiv_etl():
     ] >> unzip()
     prepare_warehouse_ = prepare_warehouse_folder() >> prepare_warehouse()
 
-    [prepare_raw_data, prepare_warehouse_] >> extract_publications() >> load_publications()
+    (
+        [prepare_raw_data, prepare_warehouse_]
+        >> extract_publications()
+        >> load_publications()
+    )
     [prepare_raw_data, prepare_warehouse_] >> extract_authors() >> load_authors()
-    [prepare_raw_data, prepare_warehouse_] >> extract_publications_authors() >> load_publications_authors()
+    (
+        [prepare_raw_data, prepare_warehouse_]
+        >> extract_publications_authors()
+        >> load_publications_authors()
+    )
+
 
 arxiv_etl()

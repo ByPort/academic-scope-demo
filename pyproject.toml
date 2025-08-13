@@ -12,10 +12,34 @@ extend-select = [
     "B",
     "C4",
     "UP",
+    "COM",
+    "A",
+    "EM",
+    "PIE",
+    "PT",
+    "Q",
+    "RET",
+    "SIM",
+    "TC",
+    "PTH",
+    "N",
+    "DOC",
+    "PLE",
+    "PLW",
+    "PLC",
+    "FURB",
+    "RUF",
+    "TRY",
+    # "PLR",
+    # "PL",
+    # "D",
+    # "ANN",
+    # "ARG",
 ]
+preview = true
 
 [tool.ruff.lint.isort]
-known-first-party = ["airflow", "common"]
+known-local-folder = ["common"]
 
 [tool.mypy]
 python_version = "3.12"
