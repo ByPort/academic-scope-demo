@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+env:
+  PYTHONPATH: ${{ github.workspace }}/airflow/dags
+
 jobs:
   lint:
     name: Lint with Ruff
