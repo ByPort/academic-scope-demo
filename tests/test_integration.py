@@ -212,7 +212,7 @@ class TestDuckDBTaskExecution:
         # Setup
         mock_get_connection.return_value = MockConnection(
             "duckdb_default",
-            {"database": ":memory:"},
+            {"path": ":memory:"},
         )
 
         # Get task
@@ -313,7 +313,7 @@ class TestErrorScenarios:
         # Setup connection
         mock_get_connection.return_value = MockConnection(
             "duckdb_default",
-            {"database": ":memory:"},
+            {"path": ":memory:"},
         )
 
         # Get task
