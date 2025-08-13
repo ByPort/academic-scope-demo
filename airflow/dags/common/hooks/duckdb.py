@@ -51,6 +51,9 @@ class DuckDBHook(BaseHook):
         return self.get_connection(self.duckdb_conn_id)
 
     def sql(self, sql: str) -> duckdb.DuckDBPyRelation:
-        config = self.config or {}
-        with duckdb.connect(database=self.database, config=config) as conn:
-            return conn.sql(sql)
+        if self.config is None:
+            with duckdb.connect(database=self.database) as conn:
+                return conn.sql(sql)
+        else:
+            with duckdb.connect(database=self.database, config=self.config) as conn:
+                return conn.sql(sql)

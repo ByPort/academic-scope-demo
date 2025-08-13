@@ -50,7 +50,7 @@ class TestDuckDBHook:
         hook.sql(sql)
 
         # Verify DuckDB was called with correct parameters
-        mock_duckdb_connect.assert_called_once_with(database=":memory:", config=None)
+        mock_duckdb_connect.assert_called_once_with(database=":memory:")
         mock_conn_instance.sql.assert_called_once_with(sql)
 
     @patch("duckdb.connect")
