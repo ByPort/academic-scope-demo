@@ -464,7 +464,7 @@
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "Operator success rate per minuite",
+        "title": "Operator success rate per minute",
         "tooltip": {
           "shared": true,
           "sort": 0,
