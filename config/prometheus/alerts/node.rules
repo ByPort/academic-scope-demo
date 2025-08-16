@@ -216,7 +216,7 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: Host Network Interface Saturated (instance {{ $labels.instance }}:{{ $labels.interface }})
+      summary: Host Network Interface Saturated (instance {{ $labels.instance }}:{{ $labels.device }})
       description: The network interface is getting overloaded.\n  VALUE = {{ $value }}
 
   - alert: HostConntrackLimit
