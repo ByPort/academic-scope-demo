@@ -31,8 +31,9 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
     ```bash
     echo "AIRFLOW_ENABLE_METRICS=True" >> .env
     echo "COMPOSE_PROFILES=monitoring" >> .env
+    cp config/alertmanager/config.yaml.example config/alertmanager/config.yaml
     ```
-    Configure webhooks in `config/alertmanager/config.yaml`
+    Configure webhooks for Discord and/or Slack in `config/alertmanager/config.yaml`
 
 5. **Start Airflow**
     ```bash
