@@ -16,5 +16,5 @@ groups:
     labels:
       severity: critical
     annotations:
-      summary: "Airflow task failed: {{ $labels.task_name }}"
-      description: "Task '{{ $labels.task_name }}' in DAG '{{ $labels.dag_id }}' failed."
+      summary: "Airflow task failed: {{ $labels.task_id }}"
+      description: "Task '{{ $labels.task_id }}' in DAG '{{ $labels.dag_id }}' failed."
