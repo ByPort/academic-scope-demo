@@ -17,36 +17,46 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
     cd academic-scope-demo
     ```
 
-2. **Configure data directory (if not in Dev Container)**
+2. **Set up `.env` file**
     ```bash
-    echo "HOST_DATA_DIR=$HOME/academic-scope-data" > .env
+    cp .env.example .env
     ```
 
-3. **Start Airflow**
+3. **Configure data directory (if not in Dev Container)**
+    ```bash
+    echo "HOST_DATA_DIR=$HOME/academic-scope-data" >> .env
+    ```
+
+4. **Optional: Enable monitoring and alerting**
+    ```bash
+    echo "AIRFLOW_ENABLE_METRICS=True" >> .env
+    echo "COMPOSE_PROFILES=monitoring" >> .env
+    ```
+    Configure webhooks in `config/alertmanager/config.yaml`
+
+5. **Start Airflow**
     ```bash
     docker compose up -d --no-recreate
     ```
-
-4. **Configure pools and connections**
+    
+6. **Set up pools and connections**
     ```bash
-    cat default/pools.json | docker compose run --rm -T airflow-cli pools import /dev/stdin
+    cat config/airflow/pools.json | docker compose run --rm -T airflow-cli pools import /dev/stdin
+
     # /dev/stdin doesn't work for connections for some reason
-    cat default/connections.json | docker compose run --rm -T airflow-cli bash -c 'cat > /tmp/connections.json && airflow connections import /tmp/connections.json'
+    cat config/airflow/connections.json | docker compose run --rm -T airflow-cli bash -c 'cat > /tmp/connections.json && airflow connections import /tmp/connections.json'
     ```
 
-5. **Start the pipeline**
+7. **Start the pipeline**
     ```bash
     ./airflow.sh dags trigger arxiv_etl
     ```
 
-6. **Monitor progress**
-   - Access Airflow UI at `http://localhost:8080` (credentials: `airflow`/`airflow`)
+8. **Monitor progress**
+   - **Airflow UI**: `http://localhost:8080` (credentials: `airflow`/`airflow`)
+   - **Grafana Dashboard**: `http://localhost:3000` (default credentials: `admin`/`admin`)
+   - **Prometheus Metrics**: `http://localhost:9090`
    - Watch the `arxiv_etl` DAG execution in the Graph or Grid view
-
-### Test
-```bash
-    PYTHONPATH=$PYTHONPATH:$(pwd)/airflow/dags pytest
-```
 
 ## 💻 Working with the Pipeline
 
@@ -64,9 +74,14 @@ Run Airflow commands using the helper script:
 ```
 
 ### Development Setup
-For local DAG development:
+Install development packages:
 ```bash
 pip install -r requirements-dev.txt
+```
+
+Run tests:
+```bash
+    PYTHONPATH=$PYTHONPATH:$(pwd)/airflow/dags pytest
 ```
 
 ### Data Exploration
@@ -114,22 +129,34 @@ LIMIT 10;
 
 ```
 academic-scope-demo/
+├── .devcontainer/               # Dev container configuration
+├── .github/workflows/ci.yml     # CI/CD pipeline configuration
 ├── airflow/
-│   ├── config/
-│   │   └── airflow.cfg          # Airflow configuration
+│   ├── config/airflow.cfg       # Airflow configuration
 │   ├── dags/
-│   │   └── arxiv_etl.py         # Main ETL DAG
+│   │   ├── arxiv_etl.py         # Main ETL DAG
+│   │   └── common/              # Shared components (hooks, operators)
 │   ├── logs/                    # Airflow task logs
 │   └── plugins/                 # Custom Airflow plugins
+├── config/                      # Monitoring and alerting configuration
+│   ├── airflow/                 # Airflow connections and pools
+│   ├── alertmanager/            # Alert routing configuration
+│   ├── grafana/                 # Dashboards and datasource config
+│   ├── prometheus/              # Metrics collection and alerting rules
+│   └── statsd/                  # StatsD exporter mappings
 ├── data/
 │   ├── raw/                     # Raw data files
 │   └── warehouse/               # DuckDB warehouse
 ├── tests/                       # Test suite (pytest)
-├── .devcontainer/               # Dev container configuration
+├── .dockerignore                # Docker build ignore patterns
+├── .env.example                 # Environment variables template
+├── .gitignore                   # Git ignore patterns
+├── airflow.Dockerfile           # Airflow service Docker image
 ├── airflow.sh                   # Airflow CLI helper script
+├── docker-compose.airflow.yml   # Complete Airflow stack
+├── pyproject.toml               # Python tools configurations
 ├── requirements.txt             # Python dependencies
 ├── requirements-dev.txt         # Python dev dependencies
-├── pyproject.toml               # Python tools configurations
 └── README.md                    # This file
 ```
 
@@ -158,6 +185,11 @@ The ETL pipeline (`arxiv_etl` DAG) orchestrates 10 tasks:
 - **Python 3.12**: Primary programming language
 - **Docker & Dev Containers**: Containerization for consistent development environment
 - **Parquet**: Columnar storage format for intermediate data
+- **Prometheus**: Metrics collection and alerting rules engine
+- **Grafana**: Data visualization and dashboards
+- **Alertmanager**: Alert routing and notification management
+- **StatsD Exporter**: Airflow metrics collection
+- **Node Exporter**: System metrics collection
 
 ### Data Processing
 
@@ -168,7 +200,7 @@ The pipeline processes the arXiv metadata which includes:
 
 ### Performance Considerations
 
-- **Memory Requirements**: At least 8 GB RAM dedicated to Docker for the Airflow stack and data processing
+- **Memory Requirements**: At least 8 GB RAM dedicated to Docker for Airflow stack and data processing
 - **DuckDB Configuration**: Configured with 1 GB memory limit for efficient processing
 - **Data Format**: Uses Parquet format for optimized storage and processing
 - **Concurrency**: Implements resource pools for warehouse operations (DuckDB supports only one writer at a time)
@@ -177,10 +209,11 @@ The pipeline processes the arXiv metadata which includes:
 
 This project demonstrates:
 - Building ETL pipelines with Apache Airflow
-- Working with real-world academic datasets
+- Working with real-world datasets
 - Data processing with modern analytical databases
 - Containerized development workflows
-- Data engineering best practices
+- Metrics collection and visualization with Prometheus and Grafana
+- Discord and Slack ready alerting with Alertmanager
 
 ## 📝 License
 
@@ -189,6 +222,7 @@ This project is for demonstration purposes and is not affiliated with arXiv or A
 ## 🚧 Future Improvements
 
 - [ ] Add data quality checks and validation
-- [ ] Add automated testing for DAG tasks
+- [x] Add automated testing for DAG tasks
 - [ ] Showcase incremental data loading
 - [ ] Include more advanced data transformations
+- [ ] Implement log aggregation with ELK stack
