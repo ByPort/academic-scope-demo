@@ -76,7 +76,7 @@ groups:
       description: Disk latency is growing (read operations > 100ms)\n  VALUE = {{ $value }}
 
   - alert: HostUnusualDiskWriteLatency
-    expr: rate(node_disk_write_time_seconds_totali{device!~"mmcblk.+"}[1m]) / rate(node_disk_writes_completed_total{device!~"mmcblk.+"}[1m]) > 0.1 and rate(node_disk_writes_completed_total{device!~"mmcblk.+"}[1m]) > 0
+    expr: rate(node_disk_write_time_seconds_total{device!~"mmcblk.+"}[1m]) / rate(node_disk_writes_completed_total{device!~"mmcblk.+"}[1m]) > 0.1 and rate(node_disk_writes_completed_total{device!~"mmcblk.+"}[1m]) > 0
     for: 2m
     labels:
       severity: warning
