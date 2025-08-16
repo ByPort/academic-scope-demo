@@ -227,3 +227,4 @@ airflow/logs
 airflow/.tmp
 data
 tests/airflow
+config/alertmanager/config.yaml
