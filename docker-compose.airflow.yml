@@ -66,6 +66,10 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__METRICS__STATSD_ON: True
+    AIRFLOW__METRICS__STATSD_HOST: "statsd-exporter"
+    AIRFLOW__METRICS__STATSD_PORT: "9125"
+    AIRFLOW__METRICS__STATSD_PREFIX: "airflow"
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -337,6 +341,80 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  statsd-exporter:
+    image: prom/statsd-exporter:v0.28.0
+    volumes:
+      - config:/config
+    entrypoint: ["/bin/sh", "-c", "--"]
+    command: ["statsd_exporter --statsd.listen-udp=:9125 --web.listen-address=:9102 --log.level debug --statsd.mapping-config=/config/statsd/statsd.yaml"]
+    ports:
+      - 9102:9102
+      - 9125:9125
+    expose:
+      - 9125/udp
+    restart: always
+  
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes:
+      - config:/config
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/config/prometheus/prometheus.yaml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.external-url=${SERVER_PROMETHEUS_ADDRESS:-http://localhost:9090}'
+    ports:
+      - 9090:9090
+    restart: always
+
+  grafana:
+    image: grafana/grafana:12.2.0-16979757807-ubuntu
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - config:/config
+    environment:
+      - GF_PATHS_PROVISIONING=/config/grafana/etc/grafana/provisioning
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    ports:
+      - 9093:9093
+    volumes:
+      - config:/config
+    command:
+      - '--config.file=/config/alertmanager/config.yaml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=${SERVER_ALERTMANAGER_ADDRESS:-http://localhost:9093}'
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host
+    command: 
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc' 
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    # ports:
+    #   - 9100:9100
+    restart: always
+    pid: host
+    network_mode: host
+
 volumes:
   postgres-db-volume:
   airflow-data:
+  prometheus-data:
+  grafana-data:
+  config:

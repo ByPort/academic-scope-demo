@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 from airflow.sdk import Connection, dag, task
@@ -11,7 +12,7 @@ DUCKDB_CONFIG = {
 }
 
 DEFAULT_ARGS = {
-    "retries": 1,
+    "retry_delay": timedelta(30),
 }
 
 

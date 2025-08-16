@@ -29,6 +29,11 @@
 			"type": "volume",
 			"source": "academic-scope-demo_airflow-data",
 			"target": "${containerWorkspaceFolder}/airflow"
+		},
+		{
+			"type": "volume",
+			"source": "academic-scope-demo_config",
+			"target": "${containerWorkspaceFolder}/config"
 		}
 	],
 
