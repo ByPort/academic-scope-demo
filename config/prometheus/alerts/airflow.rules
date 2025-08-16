@@ -11,7 +11,7 @@ groups:
       description: "The Airflow DAG '{{ $labels.dag_id }}' has failed."
 
   - alert: AirflowTaskFailure
-    expr: airflow_task_failure_count > 0
+    expr: af_agg_ti_failures > 0
     for: 5m
     labels:
       severity: critical

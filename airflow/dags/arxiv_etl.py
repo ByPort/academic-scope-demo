@@ -12,7 +12,7 @@ DUCKDB_CONFIG = {
 }
 
 DEFAULT_ARGS = {
-    "retry_delay": timedelta(30),
+    "retry_delay": timedelta(seconds=30),
 }
 
 
