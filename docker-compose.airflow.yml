@@ -66,7 +66,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
-    AIRFLOW__METRICS__STATSD_ON: True
+    AIRFLOW__METRICS__STATSD_ON: ${AIRFLOW_ENABLE_METRICS:-False}
     AIRFLOW__METRICS__STATSD_HOST: "statsd-exporter"
     AIRFLOW__METRICS__STATSD_PORT: "9125"
     AIRFLOW__METRICS__STATSD_PREFIX: "airflow"
@@ -353,6 +353,8 @@ services:
     expose:
       - 9125/udp
     restart: always
+    profiles:
+      - monitoring
   
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -368,6 +370,8 @@ services:
     ports:
       - 9090:9090
     restart: always
+    profiles:
+      - monitoring
 
   grafana:
     image: grafana/grafana:12.2.0-16979757807-ubuntu
@@ -380,6 +384,8 @@ services:
       - config:/config
     environment:
       - GF_PATHS_PROVISIONING=/config/grafana/etc/grafana/provisioning
+    profiles:
+      - monitoring
 
   alertmanager:
     image: prom/alertmanager:v0.28.1
@@ -392,6 +398,8 @@ services:
       - '--storage.path=/alertmanager'
       - '--web.external-url=${SERVER_ALERTMANAGER_ADDRESS:-http://localhost:9093}'
     restart: always
+    profiles:
+      - monitoring
 
   node-exporter:
     image: prom/node-exporter:v1.6.1
@@ -411,6 +419,8 @@ services:
     restart: always
     pid: host
     network_mode: host
+    profiles:
+      - monitoring
 
 volumes:
   postgres-db-volume:
