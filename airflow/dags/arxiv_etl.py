@@ -1,4 +1,3 @@
-from datetime import timedelta
 from pathlib import Path
 
 from airflow.sdk import Connection, dag, task
@@ -12,7 +11,7 @@ DUCKDB_CONFIG = {
 }
 
 DEFAULT_ARGS = {
-    "retry_delay": timedelta(seconds=30),
+    "retries": 0,
 }
 
 
@@ -21,7 +20,7 @@ DEFAULT_ARGS = {
     default_args=DEFAULT_ARGS,
     tags=["arxiv"],
     max_active_runs=1,
-    max_active_tasks=1,
+    # max_active_tasks=1,
 )
 def arxiv_etl() -> None:
     @task.branch()

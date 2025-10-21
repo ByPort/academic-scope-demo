@@ -22,12 +22,21 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
     cp .env.example .env
     ```
 
-3. **Configure data directory (if not in Dev Container)**
+3. **Configure data directory (if NOT IN Dev Container)**
     ```bash
     echo "HOST_DATA_DIR=$HOME/academic-scope-data" >> .env
     ```
 
-4. **Optional: Enable monitoring and alerting**
+4. **Discard all changes in git (if IN Dev Container)**
+
+    During volume creation, some files may be removed. Restore them:
+    ```bash
+    sudo chown vscode:vscode airflow
+    sudo chown vscode:vscode config
+    git restore .
+    ```
+
+5. **Optional: Enable monitoring and alerting**
     ```bash
     echo "AIRFLOW_ENABLE_METRICS=True" >> .env
     echo "COMPOSE_PROFILES=monitoring" >> .env
@@ -35,25 +44,23 @@ A complete ETL pipeline demonstration using Apache Airflow to process academic p
     ```
     Configure webhooks for Discord and/or Slack in `config/alertmanager/config.yaml`
 
-5. **Start Airflow**
+6. **Start Airflow**
     ```bash
     docker compose up -d --no-recreate
     ```
-    
-6. **Set up pools and connections**
-    ```bash
-    cat config/airflow/pools.json | docker compose run --rm -T airflow-cli pools import /dev/stdin
 
-    # /dev/stdin doesn't work for connections for some reason
-    cat config/airflow/connections.json | docker compose run --rm -T airflow-cli bash -c 'cat > /tmp/connections.json && airflow connections import /tmp/connections.json'
+7. **Set up pools and connections**
+    ```bash
+    ./airflow.sh pools import /config/airflow/pools.json
+    ./airflow.sh connections import /config/airflow/connections.json
     ```
 
-7. **Start the pipeline**
+8. **Start the pipeline**
     ```bash
     ./airflow.sh dags trigger arxiv_etl
     ```
 
-8. **Monitor progress**
+9. **Monitor progress**
    - **Airflow UI**: `http://localhost:8080` (credentials: `airflow`/`airflow`)
    - **Grafana Dashboard**: `http://localhost:3000` (default credentials: `admin`/`admin`)
    - **Prometheus Metrics**: `http://localhost:9090`
