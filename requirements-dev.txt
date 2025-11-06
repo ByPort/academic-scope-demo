@@ -1,3 +1,4 @@
+-c constraints.txt
 -r requirements.txt
 ruff
 mypy
