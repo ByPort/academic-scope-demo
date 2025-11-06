@@ -84,7 +84,7 @@ def arxiv_etl() -> None:
         );
         """
 
-    @duckdb_task(config=DUCKDB_CONFIG)
+    @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def extract_publications() -> str:
         return """
         COPY (
@@ -94,7 +94,7 @@ def arxiv_etl() -> None:
         ) TO '{{ conn.publications_parquet.extra_dejson.path }}' (FORMAT PARQUET);
         """
 
-    @duckdb_task(config=DUCKDB_CONFIG)
+    @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def extract_authors() -> str:
         return """
         COPY (
@@ -105,7 +105,7 @@ def arxiv_etl() -> None:
         ) TO '{{ conn.authors_parquet.extra_dejson.path }}' (FORMAT PARQUET);
         """
 
-    @duckdb_task(config=DUCKDB_CONFIG)
+    @duckdb_task(pool="warehouse_lock", config=DUCKDB_CONFIG)
     def extract_publications_authors() -> str:
         return """
         COPY (
